@@ -1,0 +1,16 @@
+<fieldset id="participants">
+	<legend>Participants</legend>
+	<div ng-repeat="participant in participants">
+		<input type="text" ng-model="participant.name" placeholder="Nom">
+		<input type="text" ng-model="participant.email" placeholder="Email">
+	</div>
+	<form ng-submit="addParticipant()">
+		<input class="btn-primary" type="submit" value="add a participant">
+	</form>
+</fieldset>
+<form ng-submit="newEvent()">
+	<input type="text" ng-model="eventEndDate" placeholder="Date de fin de l'&eacute;v&egrave;nement">
+	<input type="text" ng-model="eventName" placeholder="Tappez le nom de l'&eacute;v&egrave;nement">
+	<input type="submit">
+</form>
+<h3>{{eventId}}</h3>
