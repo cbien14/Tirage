@@ -1,17 +1,17 @@
 var TIRAGE_SERVICE_URL = "http://127.0.0.1:1337";
 
-var tirageApp = angular.module('tirageApp', ['ngRoute']);
+var tirageApp = angular.module('tirageApp', ['ngRoute', 'tirageService']);
 
 tirageApp.config(['$routeProvider',
 	function($routeProvider) {
-	$routeProvider.when('/', {
-		templateUrl: 'partials/newEvent.html',
-		controller: 'TirageCtrl'
-	}).when('/:eventId/:userId', {
-		templateUrl: 'partials/pick.html',
-		controller: 'TirageCtrl'
-	}).otherwise({
-		redirectTo: '/'
+		$routeProvider.when('/', {
+			templateUrl: 'partials/newEvent.html',
+			controller: 'TirageCtrl'
+		}).when('/:eventId/:userId', {
+			templateUrl: 'partials/pick.html',
+			controller: 'TirageCtrl'
+		}).otherwise({
+			redirectTo: '/'
 	});
 }]);
 
@@ -31,6 +31,7 @@ tirageApp.controller('TirageCtrl', ['$scope', '$http', '$templateCache', '$route
 				switch(data.code) {
 					case 0:
 						$scope.currentParticipant = data.participant;
+						$scope.currentEventName = data.eventName;
 						break;
 				}
 			}
@@ -39,14 +40,16 @@ tirageApp.controller('TirageCtrl', ['$scope', '$http', '$templateCache', '$route
 		});
 	}
 
-	if($routeParams.eventId && $routeParams.userId)
+	if($routeParams.eventId && $routeParams.userId) {
 		_getEventParticipation($routeParams.eventId, $routeParams.userId);
+		$scope.currentEventId = $routeParams.eventId;
+	}
 
 	$scope.getGiftTarget = function() {
-		if($scope.yourName) {
+		if($scope.currentParticipant) {
 			$http({method: "GET", 
 				url: TIRAGE_SERVICE_URL,
-				params: {name: $scope.yourName}
+				params: {'userId': $scope.currentParticipant.id, 'eventId': $scope.currentEventId}
 			}).
 			success(function(data, status) {
 				$scope.target = data.name;

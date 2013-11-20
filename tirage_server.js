@@ -9,17 +9,19 @@ var tirage = (function() {
     var _redisClient = redis.createClient();
 	var _config = undefined;
 
-	var _select = function(userName, callback) {
-		fs.readFile(FILE_NAME, function(err, data) {
-		    if(err) {
-		        callback(JSON.stringify({"code":3,"error": err}));
-		    } else {
-		        var raw_data = data.toString();
-		        var config = JSON.parse(raw_data);
-		        _config = config;
+	var _select = function(eventId, userId, callback) {
+		_redisClient.get(eventId, function (err, eventData) {
+			if(eventData) {
+				eventObject = JSON.parse(eventData);
+				console.log(eventObject);
+				eventObject.id = eventId;
+				var target = _pick(userId, eventObject);
 
-		        return _play(userName, callback);
-		    }
+				callback(JSON.stringify({"name":target}));
+
+			} else {
+				callback(JSON.stringify({"code": 2, "error": "event not found", "info": err}));
+			}
 		});
 	}
 
@@ -43,37 +45,35 @@ var tirage = (function() {
 		});
 	}
 
-	var _play = function(userName, callback) {
+	var _pick = function(userId, eventObject) {
 		var result = undefined;
-		if(_config && _config.users && _config.users.hasOwnProperty(userName)) {
-			result = _config.users[userName];
+		if(eventObject && eventObject.participants) {
+			for(var i in eventObject.participants) {
+				var currentParticipant = eventObject.participants[i];
 
-			if(result == "") {
-				var notFound = true;
+				if(currentParticipant.id == userId) {
+					var selectedParticipant = currentParticipant;
 
-				while(notFound) {
-					var rand = Math.floor(Math.random() * _config.pool.length);
+					if(selectedParticipant.target)
+						return selectedParticipant.target;
 
-					for(var i in _config.pool) {
-						selectedUser = _config.pool[i];
-		        		if(rand == i) {
-		        			if(selectedUser != userName) {
-		        				_config.users[userName] = selectedUser;
-		        				result = selectedUser;
-		        				_config.pool.splice(i, 1);
-		        				notFound = false;
-		        				break;
-		        			}
-		        		}
-		        	}
+					for(var j = 0; j < eventObject.pool.length * 3; j++) {
+						var rand = Math.floor(Math.random() * eventObject.pool.length);
+
+						if(eventObject.pool[rand] != selectedParticipant.id) {
+							selectedParticipant.target = eventObject.pool[rand];
+							eventObject.pool.splice(rand, 1);
+							var endDate = new Date(eventObject.endDateTicks);
+							var now = new Date();
+							var ttl = Math.floor((endDate.getTime() - now.getTime()) / 1000);
+							_redisClient.setex(eventObject.id, ttl, JSON.stringify(eventObject), redis.print);
+							return selectedParticipant.target;
+						}
+					}
+					return undefined;
 				}
-				_save();
 			}
-			callback(JSON.stringify({"name":result}));
-		} else {
-			callback(JSON.stringify({"code":1,"error":"user unknown"}));
 		}
-
 	}
 
 	var _save = function() {
@@ -95,6 +95,7 @@ var tirage = (function() {
 			var newEvent = {
 				name: name,
 				participants: [],
+				endDateTicks: endDateTicks,
 				pool: []
 			}
 			if(participants.constructor === Array) {
@@ -102,7 +103,7 @@ var tirage = (function() {
 					var participant = JSON.parse(participants[i]);
 					participant.id = idgen(10);
 					newEvent.participants.push(participant);
-					newEvent.pool.push(participant.name);
+					newEvent.pool.push(participant.id);
 				}
 			}
 			var newEventId = idgen(25);
@@ -132,7 +133,7 @@ var tirage = (function() {
 						var participant = eventObject.participants[i];
 
 						if(participant.id == userId) {
-							callback(JSON.stringify({"code": 0, "participant": participant}));
+							callback(JSON.stringify({"code": 0, "participant": participant, "eventName": eventObject.name}));
 							return;
 						}
 					}
@@ -160,8 +161,8 @@ http.createServer(function (req, res) {
   var request = url.parse(req.url, true);
 
   res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
-  if(request.query.hasOwnProperty("name")) {
-  	tirage.select(request.query.name, function(result) {
+  if(request.query.hasOwnProperty("userId")) {
+  	tirage.select(request.query.eventId, request.query.userId, function(result) {
   		res.end(result);
   	});
   } else if(request.query.hasOwnProperty("add")) {
