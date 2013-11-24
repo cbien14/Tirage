@@ -21,11 +21,18 @@ tirageApp.controller('TirageCtrl', ['$scope', '$http', '$templateCache', '$route
 	$scope.eventEndDate = new Date();
 
 	var _getEventParticipation = function(eventId, userId) {
-		var data = Event.getEventParticipation({ "event": eventId, "user": userId }, function() {
+		var data = Event.getEventParticipation({ "eventId": eventId, "user": userId }, function() {
 			switch(data.code) {
 					case 0:
 						$scope.currentParticipant = data.participant;
 						$scope.currentEventName = data.eventName;
+						break;
+					case 1:
+					case 2:
+						$scope.error = data.error;
+						break;
+					default:
+						$scope.error = 'something goes wrong !';
 						break;
 				}
 		});
@@ -47,7 +54,11 @@ tirageApp.controller('TirageCtrl', ['$scope', '$http', '$templateCache', '$route
 	$scope.newEvent = function() {
 		if($scope.eventName) {
 
-			var data = Event.create({ "new": $scope.eventName, "participants": $scope.participants, "endDateTicks": new Date($scope.eventEndDate).getTime() }, function(){
+			var data = Event.create({ 'data': escape(btoa(JSON.stringify({
+				'eventName':  $scope.eventName,
+				'participants': $scope.participants,
+				'eventEndDate': new Date($scope.eventEndDate).getTime()
+			})))}, function(){
 				$scope.eventName = undefined;
 				$scope.participants = [];
 				$scope.eventId = data.event;

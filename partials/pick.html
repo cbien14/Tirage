@@ -1,6 +1,11 @@
-<h1>{{currentEventName}}</h1>
-<h2>Bonjour {{currentParticipant.name}}</h2>
-<form ng-submit="getGiftTarget()">
-	<input type="submit" value="D&eacute;couvre à qui offrir ton cadeau">
-</form>
-<div>{{target}}</div>
+<div ng-show="currentParticipant">
+	<h1>{{currentEventName}}</h1>
+	<h2>Bonjour {{currentParticipant.name}}</h2>
+	<form ng-submit="getGiftTarget()">
+		<input type="submit" value="D&eacute;couvre à qui offrir ton cadeau">
+	</form>
+	<div>{{target}}</div>
+</div>
+<div ng-show="error">
+	{{error}}
+</div>
