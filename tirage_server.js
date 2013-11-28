@@ -43,24 +43,7 @@ var tirage = (function() {
 				if(currentParticipant.id == userId) {
 					var selectedParticipant = currentParticipant;
 
-					if(selectedParticipant.target)
-						return _getParticipantName(selectedParticipant.target, eventObject.participants);
-
-					for(var j = 0; j < eventObject.pool.length * 3; j++) {
-						var rand = Math.floor(Math.random() * eventObject.pool.length);
-
-						if(eventObject.pool[rand] != selectedParticipant.id) {
-							selectedParticipant.target = eventObject.pool[rand];
-							eventObject.pool.splice(rand, 1);
-							var endDate = new Date(eventObject.endDateTicks);
-							var now = new Date();
-							var ttl = Math.floor((endDate.getTime() - now.getTime()) / 1000);
-							_redisClient.setex(eventObject.id, ttl, JSON.stringify(eventObject), redis.print);
-							
-							return _getParticipantName(selectedParticipant.target, eventObject.participants);
-						}
-					}
-					return undefined;
+					return eventObject.participants[selectedParticipant.target].name;
 				}
 			}
 		}
@@ -99,6 +82,18 @@ var tirage = (function() {
 					newEvent.participants.push(participant);
 					newEvent.pool.push(participant.id);
 
+					var targetFound = false;
+					while(!targetFound) {
+						var rand = Math.floor(Math.random() * (participants.length + 1));
+
+						if(rand >= participants.length)
+							rand = participants.length -1;
+
+						if(rand != +i && (participants.length % 2 == 0 || !newEvent.participants[rand] || newEvent.participants[rand].target != i)) {
+							participant.target = rand;
+							targetFound = true;
+						}
+					}
 					_sendEmail(participant, newEventId);
 				}
 			}
@@ -162,38 +157,61 @@ var tirage = (function() {
 
 var http = require('http');
 var url = require('url');
-var Router = require('node-simple-router');
-var atob = require('atob');
-var router = Router();
+var director = require('director');
 
-router.get('/select/:eventId/select/:userId', function (request, response) {
-	response.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
-  	tirage.select(request.params.eventId, request.params.userId, function(result) {
-  		response.end(result);
+var router = new director.http.Router({
+});
+
+function newEvent() {
+	this.res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+	var _this = this;
+	tirage.createEvent(this.req.body.eventName, this.req.body.participants, this.req.body.eventEndDate, function(result){
+  		_this.res.end(result);
+  	});
+}
+
+function acceptEventPost() {
+	this.res.writeHead(200, { 
+		'Content-Type': 'application/json', 
+		'Access-Control-Allow-Origin': '*', 
+		'Access-Control-Allow-Methods': 'POST',
+		'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept' })
+	this.res.end();
+}
+
+function pickParticipantTarget(eventId, userId) {
+	this.res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
+	var _this = this;
+  	tirage.select(eventId, userId, function(result) {
+  		_this.res.end(result);
 	});
-});
+}
 
-router.get('/create/:data', function (request, response) {
-	var parameters = JSON.parse(atob(request.params.data));
-
-	response.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
-  	tirage.createEvent(parameters.eventName, parameters.participants, parameters.eventEndDate, function(result){
-  		response.end(result);
+function getParticipant(eventId, user) {
+	this.res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
+	var _this = this;
+  	tirage.getParticipant(eventId, user, function(result) {
+  		_this.res.end(result);
   	});
-});
+}
 
-router.get('/event/:eventId/:user', function (request, response) {
-	response.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
-  	tirage.getParticipant(request.params.eventId, request.params.user, function(result) {
-  		response.end(result);
-  	});
-});
+router.get('/select/:eventId/select/:userId', pickParticipantTarget);
+router.get('/event/:eventId/:user', getParticipant);
+router.post('/create', newEvent);
+router.options('/create', acceptEventPost);
 
-router.get('/', function (request, response) {
-	response.writeHead(404, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
- 	response.end();
-});
+var server = http.createServer(function (req, res) {
+	req.chunks = [];
+	req.on('data', function (chunk) {
+		req.chunks.push(chunk.toString());
+	});
 
-http.createServer(router).listen(1337);
+	router.dispatch(req, res, function (err) {
+		if (err) {
+			res.writeHead(404);
+			res.end();
+		}
+	});
+}).listen(1337);
 
 console.log('Server running at http://127.0.0.1:1337/');

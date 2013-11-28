@@ -1,5 +1,3 @@
-var TIRAGE_SERVICE_URL = "http://127.0.0.1:1337";
-
 var tirageApp = angular.module('tirageApp', ['ngRoute', 'tirageService']);
 
 tirageApp.config(['$routeProvider',
@@ -52,18 +50,18 @@ tirageApp.controller('TirageCtrl', ['$scope', '$http', '$templateCache', '$route
 	};
 
 	$scope.newEvent = function() {
-		if($scope.eventName) {
+		//if($scope.eventName) {
 
-			var data = Event.create({ 'data': escape(btoa(JSON.stringify({
+			var data = Event.create({
 				'eventName':  $scope.eventName,
 				'participants': $scope.participants,
 				'eventEndDate': new Date($scope.eventEndDate).getTime()
-			})))}, function(){
+			}, function(){
 				$scope.eventName = undefined;
 				$scope.participants = [];
 				$scope.eventId = data.event;
 			});
-		}
+		//}
 	};
 
 	$scope.addParticipant = function() {
