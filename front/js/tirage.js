@@ -50,18 +50,14 @@ tirageApp.controller('TirageCtrl', ['$scope', '$http', '$templateCache', '$route
 	};
 
 	$scope.newEvent = function() {
-		//if($scope.eventName) {
-
-			var data = Event.create({
-				'eventName':  $scope.eventName,
-				'participants': $scope.participants,
-				'eventEndDate': new Date($scope.eventEndDate).getTime()
-			}, function(){
-				$scope.eventName = undefined;
-				$scope.participants = [];
-				$scope.eventId = data.event;
-			});
-		//}
+		var data = Event.create({
+			'eventName':  $scope.eventName,
+			'participants': $scope.participants,
+			'eventEndDate': new Date($scope.eventEndDate).getTime()
+		}, function(){
+			$scope.participants = [];
+			$scope.eventId = data.event;
+		});
 	};
 
 	$scope.addParticipant = function() {

@@ -1,22 +1,21 @@
-MAX_ID_TRY = 200;
-
-var tirage = (function() {
+(function() {
 	var fs = require('fs');
 	var idgen = require('idgen');
 	var redis = require('redis');
 	var nodemailer = require("nodemailer");
+	var config = require("config");
 
 	var transport = nodemailer.createTransport("SMTP", {
-	    service: "Gmail",
+	    service: config.Emailing.service,
 	    auth: {
-	        user: "EMAIL",
-	        pass: "PASSWORD"
+	        user: config.Emailing.user,
+	        pass: config.Emailing.pass
 	    }
 	});
     
-	var _domainName = "http://192.168.0.20/tirage/";
+	var _domainName = config.Domain.fullName;
 
-    var _redisClient = redis.createClient();
+    var _redisClient = redis.createClient(config.Database.port, config.Database.host);
 	var _config = undefined;
 
 	var _select = function(eventId, userId, callback) {
@@ -25,9 +24,7 @@ var tirage = (function() {
 				eventObject = JSON.parse(eventData);
 				eventObject.id = eventId;
 				var target = _pick(userId, eventObject);
-
 				callback(JSON.stringify({"name":target}));
-
 			} else {
 				callback(JSON.stringify({"code": 2, "error": "event not found", "info": err}));
 			}
@@ -116,13 +113,19 @@ var tirage = (function() {
 	var _sendEmail = function(participant, eventId) {
 
 		var mailOptions = {
-		    from: "EMAIL",
+		    from: config.Emailing.user,
 		    to: participant.email,
 		    subject: "Cadeau !",
-		    text: "Découvre vite à qui tu dois offrir un cadeau ! " + _domainName + "#/" + eventId + "/" + participant.id
+		    text: "D&eacute;couvre vite &agrave; qui tu dois offrir un cadeau ! " + _domainName + "#/" + eventId + "/" + participant.id
 		}
 
-		transport.sendMail(mailOptions);
+		transport.sendMail(mailOptions, function (error, response) {
+			if(error){
+		        console.log(error);
+		    }else{
+		        console.log("Message sent: " + response.message);
+		    }
+		});
 	}
 
 	var _getParticipant = function(eventId, userId, callback) {
@@ -153,65 +156,3 @@ var tirage = (function() {
 		getParticipant: _getParticipant
 	}
 })();
-
-
-var http = require('http');
-var url = require('url');
-var director = require('director');
-
-var router = new director.http.Router({
-});
-
-function newEvent() {
-	this.res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-	var _this = this;
-	tirage.createEvent(this.req.body.eventName, this.req.body.participants, this.req.body.eventEndDate, function(result){
-  		_this.res.end(result);
-  	});
-}
-
-function acceptEventPost() {
-	this.res.writeHead(200, { 
-		'Content-Type': 'application/json', 
-		'Access-Control-Allow-Origin': '*', 
-		'Access-Control-Allow-Methods': 'POST',
-		'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept' })
-	this.res.end();
-}
-
-function pickParticipantTarget(eventId, userId) {
-	this.res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
-	var _this = this;
-  	tirage.select(eventId, userId, function(result) {
-  		_this.res.end(result);
-	});
-}
-
-function getParticipant(eventId, user) {
-	this.res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
-	var _this = this;
-  	tirage.getParticipant(eventId, user, function(result) {
-  		_this.res.end(result);
-  	});
-}
-
-router.get('/select/:eventId/select/:userId', pickParticipantTarget);
-router.get('/event/:eventId/:user', getParticipant);
-router.post('/create', newEvent);
-router.options('/create', acceptEventPost);
-
-var server = http.createServer(function (req, res) {
-	req.chunks = [];
-	req.on('data', function (chunk) {
-		req.chunks.push(chunk.toString());
-	});
-
-	router.dispatch(req, res, function (err) {
-		if (err) {
-			res.writeHead(404);
-			res.end();
-		}
-	});
-}).listen(1337);
-
-console.log('Server running at http://127.0.0.1:1337/');
