@@ -1,5 +1,21 @@
 var tirageApp = angular.module('tirageApp', ['ngRoute', 'tirageService']);
 
+tirageApp.directive('datePicker', function () {
+    return {
+        link: function postLink(scope, element, attrs) {
+            scope.$watch(attrs.datePicker, function () {
+                if (attrs.datePicker === 'start') {
+                    element.pickadate({
+                    	min: new Date(),
+                    	formatSubmit: 'yyyy/mm/dd',
+                    	onSet: function(e) { scope.eventEndDate = this.get();}
+                    });
+                }
+            });
+        }
+    };
+});
+
 tirageApp.config(['$routeProvider',
 	function($routeProvider) {
 		$routeProvider.when('/', {
@@ -16,7 +32,8 @@ tirageApp.config(['$routeProvider',
 tirageApp.controller('TirageCtrl', ['$scope', '$http', '$templateCache', '$routeParams', 'Event', function($scope, $http, $templateCache, $routeParams, Event) {
 
 	$scope.participants = [{ name: undefined, email: undefined }, { name: undefined, email: undefined }];
-	$scope.eventEndDate = new Date();
+	$scope.eventEndDate = undefined;
+	$scope.reEmail = /\S+@\S+\.\S+/
 
 	var _getEventParticipation = function(eventId, userId) {
 		var data = Event.getEventParticipation({ "eventId": eventId, "user": userId }, function() {

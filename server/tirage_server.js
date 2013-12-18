@@ -99,7 +99,7 @@
 				if(!exists) {
 					idNotFound = false;
 
-					var ttl = Math.floor((endDate.getTime() - now.getTime()) / 1000);
+					var ttl = Math.floor((endDateTicks - now.getTime()) / 1000);
 					_redisClient.setex(newEventId, ttl, JSON.stringify(newEvent), redis.print);
 
 					callback(JSON.stringify({"code":0,"event":newEventId}));
@@ -150,9 +150,11 @@
 		});
 	}
 
-	return {
+	var result = {
 		select: _select,
 		createEvent: _createEvent,
 		getParticipant: _getParticipant
 	}
+
+	module.exports = result;
 })();

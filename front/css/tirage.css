@@ -1,0 +1,42 @@
+body {
+	background: url(../img/bkg.jpg);
+	font-family: 'Josefin Sans', sans-serif;
+}
+
+fieldset {
+	background: rgba(245,249,250,0.75);
+	border: none;
+	margin: 10px auto;
+	border-radius: 15px
+}
+
+button, input[type='submit'] {
+	background: #c1dbd8;
+	border: none;
+	border-radius: 15px;
+	padding: 10px
+}
+
+button:hover {
+	cursor: pointer;
+}
+
+input[type='text'], input[type='email'] {
+	font-family: 'Josefin Sans', sans-serif;
+	border: none;
+	padding: 5px;
+	width: 250px
+}
+
+h2 {
+	font-size: 36px;
+	font-weight: 100
+}
+
+.newParticipant input[type='text'] {
+	background: rgba(255,255,255,.5);
+}
+
+.response {
+	text-align: center
+}

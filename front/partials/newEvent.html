@@ -1,20 +1,24 @@
 <div ng-hide="eventId">
-	<fieldset id="participants">
-		<legend>Participants</legend>
-		<div ng-repeat="participant in participants">
-			<input type="text" ng-model="participant.name" placeholder="Nom">
-			<input type="text" ng-model="participant.email" placeholder="Email">
-		</div>
-		<form ng-submit="addParticipant()">
-			<input class="btn-primary" type="submit" value="add a participant">
-		</form>
-	</fieldset>
 	<form ng-submit="newEvent()">
-		<input type="text" ng-model="eventEndDate" placeholder="Date de fin de l'&eacute;v&egrave;nement">
-		<input type="text" ng-model="eventName" placeholder="Tappez le nom de l'&eacute;v&egrave;nement">
-		<input type="submit">
+		<fieldset id="eventData">
+			<h2>&Eacute;v&egrave;nement</h2>
+			<div><input type="text" ng-model="eventName" placeholder="Nom de l'&eacute;v&egrave;nement" required></div>
+			<div><input id="date" date-picker="start" ng-change="addParticipant()" type="text" ng-model="eventEndDate" placeholder="Date de fin de l'&eacute;v&egrave;nement" required></div>
+		</fieldset>
+		<fieldset id="participants">
+			<h2>Participants</h2>
+			<div ng-repeat="participant in participants">
+				<input type="text" ng-model="participant.name" placeholder="Nom" required>
+				<input type="email" ng-model="participant.email" placeholder="Email" required>
+			</div>
+			<div><button ng-click="addParticipant()">add a participant</button></div>
+			<!--<button ng-click="newEvent()">Cr&eacute;er l'&eacute;v&egrave;nement</button>-->
+			<input type="submit" value="Cr&eacute;er l'&eacute;v&egrave;nement">
+		</fieldset>
 	</form>
 </div>
 <div ng-show="eventId">
-	<p>L'évènement {{eventName}} a été créé. Les participants recevrons bientôt un email leur permettant de savoir à qui offrir leur cadeau.</p>
+	<fieldset class="response">
+		<p>L'évènement {{eventName}} a été créé. Les participants recevrons bientôt un email leur permettant de savoir à qui offrir leur cadeau.</p>
+	</fieldset>
 </div>
