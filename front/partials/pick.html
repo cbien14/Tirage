@@ -1,8 +1,8 @@
-<div ng-show="currentParticipant">
+<div ng-show="currentParticipant" id="pick">
 	<h1>{{currentEventName}}</h1>
 	<h2>Bonjour {{currentParticipant.name}}</h2>
 	<button ng-hide="target" ng-click="getGiftTarget()">D&eacute;couvre à qui offrir ton cadeau</button>
-	<div>{{target}}</div>
+	<h2 ng-show="target">Votre cadeau sera pour {{target}}</h2>
 </div>
 <div ng-show="error">
 	{{error}}

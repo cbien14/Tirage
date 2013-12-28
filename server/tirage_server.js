@@ -116,7 +116,7 @@
 		    from: config.Emailing.user,
 		    to: participant.email,
 		    subject: "Cadeau !",
-		    text: "D&eacute;couvre vite &agrave; qui tu dois offrir un cadeau ! " + _domainName + "#/" + eventId + "/" + participant.id
+		    text: "Découvre vite à qui tu dois offrir un cadeau ! " + _domainName + "#/" + eventId + "/" + participant.id
 		}
 
 		transport.sendMail(mailOptions, function (error, response) {

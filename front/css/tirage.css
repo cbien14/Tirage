@@ -3,11 +3,17 @@ body {
 	font-family: 'Josefin Sans', sans-serif;
 }
 
-fieldset {
+fieldset, #pick {
 	background: rgba(245,249,250,0.75);
 	border: none;
 	margin: 10px auto;
 	border-radius: 15px
+}
+
+#pick {
+	width: 1024px;
+	padding: 10px;
+	text-align: center
 }
 
 button, input[type='submit'] {
