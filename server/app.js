@@ -8,11 +8,15 @@ var router = new director.http.Router({
 });
 
 function newEvent() {
-	this.res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-	var _this = this;
-	tirage.createEvent(this.req.body.eventName, this.req.body.participants, this.req.body.eventEndDate, function(result){
-  		_this.res.end(result);
-  	});
+	try	{
+		this.res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+		var _this = this;
+		tirage.createEvent(this.req.body.eventName, this.req.body.participants, this.req.body.eventEndDate, function(result){
+	  		_this.res.end(result);
+	  	});
+  	} catch(err) {
+		console.log(err);
+	}
 }
 
 function acceptEventPost() {
@@ -25,19 +29,27 @@ function acceptEventPost() {
 }
 
 function pickParticipantTarget(eventId, userId) {
-	this.res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
-	var _this = this;
-  	tirage.select(eventId, userId, function(result) {
-  		_this.res.end(result);
-	});
+	try	{
+		this.res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
+		var _this = this;
+	  	tirage.select(eventId, userId, function(result) {
+	  		_this.res.end(result);
+		});
+	} catch(err) {
+		console.log(err);
+	}
 }
 
 function getParticipant(eventId, user) {
-	this.res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
-	var _this = this;
-  	tirage.getParticipant(eventId, user, function(result) {
-  		_this.res.end(result);
-  	});
+	try	{
+		this.res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*"});
+		var _this = this;
+	  	tirage.getParticipant(eventId, user, function(result) {
+	  		_this.res.end(result);
+	  	});
+  	} catch(err) {
+		console.log(err);
+	}
 }
 
 router.get('/select/:eventId/select/:userId', pickParticipantTarget);
